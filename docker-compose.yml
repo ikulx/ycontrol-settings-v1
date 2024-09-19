@@ -1,0 +1,13 @@
+version: '3'
+services:
+  web:
+    build: .
+    image: ikulx/tableeditor:v0.0.1
+    container_name: DBEditor01  # Hier den gewünschten Containernamen angeben
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - ./mnt/data:/app/mnt/data  # Mount the host directory as a volume
+    environment:
+      - NODE_ENV=development

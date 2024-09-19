@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Page</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: black;
+            color: white;
+            font-family: 'Inter', sans-serif;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+            font-size: 18px;
+            text-align: left;
+        }
+        th, td {
+            padding: 12px;
+            border: 1px solid #ddd;
+        }
+        th {
+            background-color: #333;
+            cursor: pointer;
+        }
+        input[type="text"], input[type="number"], select {
+            width: 100%;
+            box-sizing: border-box;
+            background-color: #222;
+            color: white;
+            border: 1px solid #444;
+        }
+        input[type="checkbox"] {
+            margin: 10px;
+        }
+        button {
+            background-color: #444;
+            color: white;
+            border: 1px solid #666;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #555;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .modal-content {
+            background-color: #333;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+            color: white;
+        }
+        .modal-content input[type="checkbox"] {
+            margin-right: 10px;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close:hover,
+        .close:focus {
+            color: #fff;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .filter-container {
+            margin-bottom: 20px;
+        }
+        .filter-container label {
+            margin-right: 10px;
+        }
+        .filter-container select {
+            background-color: #222;
+            color: white;
+            border: 1px solid #444;
+        }
+        .save-all-button {
+            background-color: #28a745;
+            color: white;
+            border: 1px solid #28a745;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            float: right;
+        }
+        .save-all-button:hover {
+            background-color: #218838;
+            border-color: #1e7e34;
+        }
+        .button-container {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+        .conditional {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Admin Page</h1>
+    <div class="filter-container">
+        <label for="editor-filter">Filter by Editor:</label>
+        <select id="editor-filter" onchange="filterByEditor()">
+            <option value="">All</option>
+        </select>
+    </div>
+
+    <form id="add-form">
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="NAME" required>
+        <label for="var_value">Var Value:</label>
+        <input type="text" id="var_value" name="VAR_VALUE" required>
+        <label for="unit">Unit:</label>
+        <input type="text" id="unit" name="unit">
+        <label for="type">Type:</label>
+        <select id="type" name="TYPE" required onchange="toggleConditionalFields()">
+            <option value="num">Num</option>
+            <option value="bool">Bool</option>
+            <option value="drop">Drop</option>
+            <option value="text">Text</option>
+        </select>
+        <div id="min-max-fields" class="conditional">
+            <label for="min">Min:</label>
+            <input type="number" id="min" name="MIN">
+            <label for="max">Max:</label>
+            <input type="number" id="max" name="MAX">
+        </div>
+        <div id="opti-field" class="conditional">
+            <label for="opti">Opti:</label>
+            <input type="text" id="opti" name="OPTI">
+        </div>
+        <label for="editor">Editor:</label>
+        <input type="text" id="editor" name="EDITOR" required placeholder="Use comma to separate multiple editors">
+        <label for="sort">Sort:</label>
+        <input type="number" id="sort" name="sort" required>
+        <label for="adresse">Adresse:</label>
+        <input type="number" step="1" id="adresse" name="adresse">
+        <label for="faktor">Faktor:</label>
+        <input type="number" step="1" id="faktor" name="faktor">
+        <!-- Neue Felder für HKL und HKL_Feld -->
+        <label for="hkl">HKL:</label>
+        <input type="checkbox" id="hkl" name="HKL">
+        <label for="hkl_feld">HKL Feld:</label>
+        <select id="hkl_feld" name="HKL_Feld">
+            <option value="x">keine</option>
+            <option value="Feld1">VL Ausl.</option>
+            <option value="Feld2">VL Fuss</option>
+            <option value="Feld3">AT Fuss</option>
+            <option value="Feld4">HZ Grenz</option>
+            <option value="Feld5">AT Ausl.</option>
+            <option value="Feld6">Totband</option>
+            <option value="Feld7">VL Soll</option>
+            <option value="Dis1">VL Min</option>
+            <option value="Dis2">VL Max</option>
+            <option value="Dis3">AT ist</option>
+            <option value="Dis4">AT ged</option>
+            
+            <option value="Dis5">AT geb</option>
+            <option value="Kuehlen">Kuehlen</option>
+        </select>
+        <button type="submit">Add Entry</button>
+    </form>
+
+    <table id="data-table">
+        <thead>
+            <tr>
+                <th data-column="NAME" data-order="desc">Name</th>
+                <th data-column="VAR_VALUE" data-order="desc">Var Value</th>
+                <th data-column="unit" data-order="desc">Unit</th>
+                <th data-column="TYPE" data-order="desc">Type</th>
+                <th data-column="OPTI" data-order="desc">Opti</th>
+                <th data-column="MIN" data-order="desc">Min</th>
+                <th data-column="MAX" data-order="desc">Max</th>
+                <th data-column="EDITOR" data-order="desc">Editor</th>
+                <th data-column="visible" data-order="desc">Visible</th>
+                <th data-column="sort" data-order="desc">Sort</th>
+                <th data-column="adresse" data-order="desc">Adresse</th>
+                <th data-column="faktor" data-order="desc">Faktor</th>
+                <th data-column="HKL" data-order="desc">HKL</th>
+                <th data-column="HKL_Feld" data-order="desc">HKL Feld</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Daten werden hier eingefügt -->
+        </tbody>
+    </table>
+
+    <div class="button-container">
+        <button class="save-all-button" onclick="saveAllChanges()">Speichern</button>
+    </div>
+
+    <div id="deleteModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <p>Möchten Sie diesen Eintrag wirklich löschen?</p>
+            <label>
+                <input type="checkbox" id="suppressConfirmation"> Bestätigung für die nächsten 5 Löschvorgänge unterdrücken
+            </label>
+            <button id="confirmDeleteButton">Löschen</button>
+        </div>
+    </div>
+
+    <script>
+        let suppressConfirmationCount = 0;
+        let currentDeleteId = null;
+        let currentSortColumn = '';
+        let currentSortOrder = 'desc';
+        let originalData = [];
+        let changes = {};
+    
+        document.getElementById('add-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const data = {
+                NAME: formData.get('NAME'),
+                VAR_VALUE: formData.get('VAR_VALUE'),
+                TYPE: formData.get('TYPE'),
+                OPTI: formData.get('OPTI'),
+                MIN: formData.get('MIN'),
+                MAX: formData.get('MAX'),
+                EDITOR: formData.get('EDITOR'),
+                sort: formData.get('sort'),
+                unit: formData.get('unit'),
+                adresse: formData.get('adresse'),
+                faktor: formData.get('faktor'),
+                HKL: formData.get('HKL') ? 1 : 0,
+                HKL_Feld: formData.get('HKL_Feld')
+            };
+            console.log('Adding new entry:', data); // Log the data being added
+            fetch('/api/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                console.log(result.message);
+                loadData();
+                event.target.reset();
+                toggleConditionalFields(); // Reset conditional fields visibility
+            })
+            .catch(error => console.error('Error adding data:', error));
+        });
+    
+        function toggleConditionalFields() {
+            const type = document.getElementById('type').value;
+            document.getElementById('min-max-fields').style.display = type === 'num' ? 'block' : 'none';
+            document.getElementById('opti-field').style.display = type === 'drop' ? 'block' : 'none';
+        }
+    
+        function updateEntry(id, row) {
+            const data = {
+                id: id,
+                NAME: row.querySelector('.name').value,
+                VAR_VALUE: row.querySelector('.var_value').value,
+                unit: row.querySelector('.unit').value,
+                TYPE: row.querySelector('.type').value,
+                OPTI: row.querySelector('.opti').value,
+                MIN: row.querySelector('.min').value,
+                MAX: row.querySelector('.max').value,
+                EDITOR: row.querySelector('.editor').value,
+                visible: row.querySelector('.visible').checked ? 1 : 0,
+                sort: row.querySelector('.sort').value,
+                adresse: row.querySelector('.adresse').value,
+                faktor: row.querySelector('.faktor').value,
+                HKL: row.querySelector('.hkl').checked ? 1 : 0,
+                HKL_Feld: row.querySelector('.hkl_feld').value
+            };
+            changes[id] = data;
+        }
+    
+        function saveAllChanges() {
+            const updates = [];
+            document.querySelectorAll('#data-table tbody tr').forEach(row => {
+                const id = row.dataset.id;
+                const data = {
+                    id: id,
+                    NAME: row.querySelector('.name').value,
+                    VAR_VALUE: row.querySelector('.var_value').value,
+                    unit: row.querySelector('.unit').value,
+                    TYPE: row.querySelector('.type').value,
+                    OPTI: row.querySelector('.opti').value,
+                    MIN: row.querySelector('.min').value,
+                    MAX: row.querySelector('.max').value,
+                    EDITOR: row.querySelector('.editor').value,
+                    visible: row.querySelector('.visible').checked ? 1 : 0,
+                    sort: row.querySelector('.sort').value,
+                    adresse: row.querySelector('.adresse').value,
+                    faktor: row.querySelector('.faktor').value,
+                    HKL: row.querySelector('.hkl').checked ? 1 : 0,
+                    HKL_Feld: row.querySelector('.hkl_feld').value
+                };
+                updates.push(data);
+            });
+            console.log('Sending updates:', updates); // Log the updates being sent
+            fetch('/api/admin/update', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(updates)
+            })
+            .then(response => response.json())
+            .then(result => {
+                console.log(result.message);
+                loadData(); // Reload data after saving
+            })
+            .catch(error => console.error('Error saving changes:', error));
+        }
+    
+        function confirmDelete(id) {
+            if (suppressConfirmationCount > 0) {
+                suppressConfirmationCount--;
+                deleteEntry(id);
+            } else {
+                currentDeleteId = id;
+                document.getElementById('deleteModal').style.display = 'block';
+            }
+        }
+    
+        function deleteEntry(id) {
+            fetch('/api/delete', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ id: id })
+            })
+            .then(response => response.json())
+            .then(result => {
+                console.log(result.message);
+                loadData();
+            })
+            .catch(error => console.error('Error deleting data:', error));
+        }
+    
+        function closeModal() {
+            document.getElementById('deleteModal').style.display = 'none';
+        }
+    
+        document.getElementById('confirmDeleteButton').addEventListener('click', function() {
+            if (document.getElementById('suppressConfirmation').checked) {
+                suppressConfirmationCount = 5;
+            }
+            deleteEntry(currentDeleteId);
+            closeModal();
+        });
+    
+        function sortTable(column, order) {
+            fetch(`/api/all?sortColumn=${column}&sortOrder=${order}`)
+                .then(response => response.json())
+                .then(data => {
+                    originalData = data; // Store original data
+                    renderTable(data);
+                })
+                .catch(error => console.error('Error fetching data:', error));
+        }
+    
+        function filterByEditor() {
+            const editor = document.getElementById('editor-filter').value;
+            const filteredData = editor ? originalData.filter(row => row.EDITOR.split(',').includes(editor)) : originalData;
+            renderTable(filteredData);
+        }
+    
+        function renderTable(data) {
+            const tableBody = document.getElementById('data-table').getElementsByTagName('tbody')[0];
+            tableBody.innerHTML = '';
+            data.forEach(row => {
+                let newRow = tableBody.insertRow();
+                newRow.dataset.id = row.id;
+                newRow.innerHTML = `
+                    <td><input type="text" class="name" value="${row.NAME}" onchange="updateEntry(${row.id}, this.parentNode.parentNode)"></td>
+                    <td><input type="text" class="var_value" value="${row.VAR_VALUE}" onchange="updateEntry(${row.id}, this.parentNode.parentNode)"></td>
+                    <td><input type="text" class="unit" value="${row.unit}" onchange="updateEntry(${row.id}, this.parentNode.parentNode)"></td>
+                    <td>
+                        <select class="type" onchange="updateEntry(${row.id}, this.parentNode.parentNode)">
+                            <option value="num" ${row.TYPE === 'num' ? 'selected' : ''}>Num</option>
+                            <option value="bool" ${row.TYPE === 'bool' ? 'selected' : ''}>Bool</option>
+                            <option value="drop" ${row.TYPE === 'drop' ? 'selected' : ''}>Drop</option>
+                            <option value="text" ${row.TYPE === 'text' ? 'selected' : ''}>Text</option>
+                        </select>
+                    </td>
+                    <td><input type="text" class="opti" value="${row.OPTI}" onchange="updateEntry(${row.id}, this.parentNode.parentNode)"></td>
+                    <td><input type="number" class="min" value="${row.MIN}" onchange="updateEntry(${row.id}, this.parentNode.parentNode)"></td>
+                    <td><input type="number" class="max" value="${row.MAX}" onchange="updateEntry(${row.id}, this.parentNode.parentNode)"></td>
+                    <td><input type="text" class="editor" value="${row.EDITOR}" onchange="updateEntry(${row.id}, this.parentNode.parentNode)"></td>
+                    <td><input type="checkbox" class="visible" ${row.visible ? 'checked' : ''} onchange="updateEntry(${row.id}, this.parentNode.parentNode)"></td>
+                    <td><input type="number" class="sort" value="${row.sort}" onchange="updateEntry(${row.id}, this.parentNode.parentNode)"></td>
+                    <td><input type="number" step="1" class="adresse" value="${row.adresse}" onchange="updateEntry(${row.id}, this.parentNode.parentNode)"></td>
+                    <td><input type="number" step="1" class="faktor" value="${row.faktor}" onchange="updateEntry(${row.id}, this.parentNode.parentNode)"></td>
+                    <td><input type="checkbox" class="hkl" ${row.HKL == 1 ? 'checked' : ''} onchange="updateEntry(${row.id}, this.parentNode.parentNode)"></td>
+                    <td>
+                        <select class="hkl_feld" onchange="updateEntry(${row.id}, this.parentNode.parentNode)">
+                            <option value="x" ${row.HKL_Feld === 'x' ? 'selected' : ''}>keine</option>
+                            <option value="Feld1" ${row.HKL_Feld === 'Feld1' ? 'selected' : ''}>VL Ausl.</option>
+                            <option value="Feld2" ${row.HKL_Feld === 'Feld2' ? 'selected' : ''}>VL Fuss</option>
+                            <option value="Feld3" ${row.HKL_Feld === 'Feld3' ? 'selected' : ''}>AT Fuss</option>
+                            <option value="Feld4" ${row.HKL_Feld === 'Feld4' ? 'selected' : ''}>HZ Grenz</option>
+                            <option value="Feld5" ${row.HKL_Feld === 'Feld5' ? 'selected' : ''}>AT Ausl.</option>
+                            <option value="Feld6" ${row.HKL_Feld === 'Feld6' ? 'selected' : ''}>Totband</option>
+                            <option value="Feld7" ${row.HKL_Feld === 'Feld7' ? 'selected' : ''}>VL Soll</option>
+                            <option value="Dis1" ${row.HKL_Feld === 'Dis1' ? 'selected' : ''}>VL Min</option>
+                            <option value="Dis2" ${row.HKL_Feld === 'Dis2' ? 'selected' : ''}>VL Max</option>
+                            <option value="Dis3" ${row.HKL_Feld === 'Dis3' ? 'selected' : ''}>AT ist</option>
+                            <option value="Dis4" ${row.HKL_Feld === 'Dis4' ? 'selected' : ''}>AT ged</option>
+                            <option value="Dis5" ${row.HKL_Feld === 'Dis5' ? 'selected' : ''}>AT geb</option>
+                            <option value="Kuehlen" ${row.HKL_Feld === 'Kuehlen' ? 'selected' : ''}>Kuehlen</option>
+                        </select>
+                    </td>
+                    <td>
+                        <button onclick="confirmDelete(${row.id})">Löschen</button>
+                    </td>
+                `;
+            });
+        }
+    
+        function loadEditors() {
+            fetch('/api/editors')
+                .then(response => response.json())
+                .then(editors => {
+                    const editorFilter = document.getElementById('editor-filter');
+                    editors.forEach(editor => {
+                        let option = document.createElement('option');
+                        option.value = editor;
+                        option.textContent = editor;
+                        editorFilter.appendChild(option);
+                    });
+                })
+                .catch(error => console.error('Error fetching editors:', error));
+        }
+    
+        function loadData() {
+            fetch('/api/all')
+                .then(response => response.json())
+                .then(data => {
+                    originalData = data; // Store original data
+                    renderTable(data);
+                })
+                .catch(error => console.error('Error fetching data:', error));
+        }
+    
+        document.addEventListener('DOMContentLoaded', () => {
+            loadEditors();
+            loadData();
+    
+            document.querySelectorAll('th[data-column]').forEach(header => {
+                header.addEventListener('click', () => {
+                    const column = header.getAttribute('data-column');
+                    const order = header.getAttribute('data-order');
+                    currentSortColumn = column;
+                    currentSortOrder = order;
+    
+                    // Toggle sort order
+                    const newOrder = order === 'asc' ? 'desc' : 'asc';
+                    header.setAttribute('data-order', newOrder);
+    
+                    sortTable(column, newOrder);
+                });
+            });
+        });
+    </script>
+    
+</body>
+</html>

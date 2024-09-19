@@ -1,0 +1,30 @@
+# Ignoriere Node.js spezifische Dateien und Verzeichnisse
+node_modules
+npm-debug.log
+yarn-error.log
+
+# Ignoriere Logs
+logs
+*.log
+
+# Ignoriere Betriebssystem spezifische Dateien
+.DS_Store
+Thumbs.db
+
+# Ignoriere Umgebungsvariablen-Dateien
+.env
+
+# Ignoriere Docker-Dateien und -Verzeichnisse
+.dockerignore
+Dockerfile
+
+# Ignoriere Editor-spezifische Dateien
+.vscode/
+.idea/
+
+# Ignoriere alle möglichen Build-Verzeichnisse
+dist
+build
+
+# Ignoriere hochgeladene Dateien
+/mnt/data/

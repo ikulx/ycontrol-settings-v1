@@ -1,0 +1,5 @@
+
+sudo docker run -d --name dbeditor -p 3000:3000 -v /home/pi/Ycontroldata/:/app/mnt/data ikulx/ycontrol-setting:v0.0.1
+
+docker buildx build --platform linux/arm64  -t ikulx/ycontrol-setting:v0.0.1 .
+docker push ikulx/ycontrol-setting:v0.0.1   
